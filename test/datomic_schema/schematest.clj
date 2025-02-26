@@ -38,7 +38,8 @@
    (schema
     person
     (fields
-     [name :string]))
+     [name :string]
+     [values :tuple :many [:long :keyword]]))
    (schema
     group
     (fields
@@ -81,6 +82,7 @@
             {:db/id (d/tempid :db.part/user)
              :base/type :user
              :person/name "Bob"
+             :person/values [[0 :hello]]
              :auth/pwd (sha "bobby2015") ;; use bcrypt for real please:
              ;; https://github.com/xsc/pandect or https://github.com/weavejester/crypto-password
              :auth/login "bob@example.com"}
@@ -91,7 +93,7 @@
              :base/dateadded (java.util.Date.)
              :asset/serial "1234"
              :asset/tag [:asset.tag/computer :asset.tag/expensive]
-             :asset/ns-tag [:the/computer :very/expensive]
+             ;:asset/ns-tag [:the/computer :very/expensive]
              :asset/datepurchased #inst "2014-12-25"
              :asset/value 10200
              :asset/deflationrate 12.445

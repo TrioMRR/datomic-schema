@@ -1,7 +1,7 @@
 (ns datomic-schema.schema
   (:require
-   [datomic.api :as d]
-   [datomic.function :as df]))
+    [datomic.api :as d]
+    [datomic.function :as df]))
 
 ;; The main schema functions
 (defmacro fields
@@ -40,9 +40,12 @@
    :unique-value :db.unique/value
    :unique-identity :db.unique/identity})
 
+(defn type->datomic [type]
+  (keyword "db.type" (if (= type :enum) "ref" (name type))))
+
 (defn field->datomic [basename part {:keys [gen-all? index-all?]} acc [fieldname [type opts]]]
   (let [uniq (first (remove nil? (map #(unique-mapping %) opts)))
-        dbtype (keyword "db.type" (if (= type :enum) "ref" (name type)))
+        dbtype (type->datomic type)
         result
         (cond->
             {(if (:alter! opts) :db.alter/_attribute :db.install/_attribute) :db.part/db
@@ -58,7 +61,13 @@
 
           (or gen-all? (opts :fulltext)) (assoc :db/fulltext (boolean (opts :fulltext)))
           (or gen-all? (opts :component)) (assoc :db/isComponent (boolean (opts :component)))
-          (or gen-all? (opts :nohistory)) (assoc :db/noHistory (boolean (opts :nohistory))))]
+          (or gen-all? (opts :nohistory)) (assoc :db/noHistory (boolean (opts :nohistory)))
+
+          (= type :tuple) (assoc :db/tupleTypes (->> opts
+                                                     (filter vector?)
+                                                     first
+                                                     (map type->datomic)
+                                                     vec)))]
     (concat
      acc
      [(if uniq (assoc result :db/unique uniq) result)]
